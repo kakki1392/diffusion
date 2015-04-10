@@ -141,6 +141,7 @@ void Diffusion1d::createX(){
 }
 
 void Diffusion1d::initialize(){
+	t = 0.0;
 	createDiagonals();
 	createB();
 	createDeltaFunction();
