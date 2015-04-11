@@ -29,14 +29,14 @@ Gnuplotting & Gnuplotting::operator<<(const char * command){
 	return *this;
 }
 
-void Gnuplotting::xrange(double &xmin, double &xmax){
+void Gnuplotting::xrange(double xmin, double xmax){
 	stringstream ss;
 	ss << "set xrange [" << xmin << ":" << xmax << "]";
 	string s = ss.str();
 	cmd(s);
 }
 
-void Gnuplotting::yrange(double &ymin, double &ymax){
+void Gnuplotting::yrange(double ymin, double ymax){
 	stringstream ss;
 	ss << "set yrange [" << ymin << ":" << ymax << "]";
 	string s = ss.str();
@@ -86,6 +86,42 @@ void Gnuplotting::xystream(size_t & N, arma::vec & x, arma::vec & y){
 		ss << x(i) << " " << y(i);
 		string str = ss.str();
 		cmd(str);
+	}
+	cmd("e");
+}
+
+void Gnuplotting::xystream_replot(size_t & N, arma::vec & x, arma::vec & y, const char* title){
+	stringstream s;
+	s << "replot '-' title '" << title << "' w lines";
+	string command_string = s.str();
+	cout << command_string;
+	cmd(command_string);
+	for(size_t i=0; i<N; i++){
+		stringstream ss;
+		ss << x(i) << " " << y(i);
+		string str = ss.str();
+		cmd(str);
+	}
+	cmd("e");
+}
+
+void Gnuplotting::two_xystream(size_t &N1, vec &x1, vec &y1, const char* title1, size_t &N2, vec &x2, vec &y2, const char* title2){
+	stringstream s;
+	s << "plot '-' t '" << title1 << "' w lines, '-' t '" << title2 << "' w lines"; 
+	string command1 = s.str();
+	cmd(command1);
+	for(size_t i=0; i < N1; i++){
+		stringstream ss1;
+		ss1 << x1(i) << " " << y1(i);
+		string str1= ss1.str();
+		cmd(str1);
+	}
+	cmd("e");
+	for(size_t j=0; j<N2; j++){
+		stringstream ss2;
+		ss2 << x2(j) << " " << y2(j);
+		string str2 = ss2.str();
+		cmd(str2);
 	}
 	cmd("e");
 }

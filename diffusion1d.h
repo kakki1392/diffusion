@@ -31,6 +31,9 @@ class Diffusion1d{
 		virtual double u_initial(double & x) = 0;
 
 		void createCustomInitial();
+		void createUnbounded_analytic();
+		void createAbsorbing_analytic(size_t m);
+		void createReflective_analytic(size_t m);
 
 		void setReflective();
 		void setAbsorbing();
@@ -38,6 +41,13 @@ class Diffusion1d{
 		void setD_0(double & d_0);
 
 		void plot();
+		void plot_with_unbounded();
+		void plot_with_absorbing();
+		void plot_with_reflective();
+
+		void plotUnbounded();
+		void plotAbsorbing();
+		void plotReflective();
 		
 		void print_dt_SI();
 		void print_dx_SI();
@@ -51,7 +61,6 @@ class Diffusion1d{
 		void solve();         //Computes A_matrix_inverse
 		void iterate(size_t it);       //Iterates the system through time
 		void iterateForSeconds(double seconds);
-
 	private:
 		double alpha(size_t i);
 		double beta(size_t i);
@@ -60,6 +69,10 @@ class Diffusion1d{
 		void createX();
 		void createDeltaFunction();
 
+		double u_n_eigen_absorbing(double x, size_t n);
+		double u_n_eigen_reflective(double x, size_t n);
+
+		//SYSTEM PARAMETERS
 		double u_0; //number of particles
 		double L;   //size of system
 		double D_0; //max size of diffusion constant D=D(x)
@@ -78,6 +91,10 @@ class Diffusion1d{
 
 		vec x;  //arma::vector containing all positions
 		vec u;  //arma::vector containing u(x) at time t
+		vec u_unbounded;
+		vec u_absorbing;
+		vec u_reflective;
+		double u_peak; //size of initial deltafunction
 
 		mat A_inv;  //inverse of A_matrix, is only inverted ONCE
 		mat B;
@@ -96,4 +113,33 @@ class ConstantDiffusion: public Diffusion1d{
 
 };
 
+class StepDiffusion: public Diffusion1d{
+	public:
+		StepDiffusion();
+		~StepDiffusion(){};
+		virtual double f(double & x);
+		virtual double f_prime(double & x);
+		virtual double u_initial(double & x);
+
+};
+
+class LinearDiffusion: public Diffusion1d{
+	public:
+		LinearDiffusion();
+		~LinearDiffusion(){};
+		virtual double f(double & x);
+		virtual double f_prime(double & x);
+		virtual double u_initial(double & x);
+
+};
+
+class SinusDiffusion: public Diffusion1d{
+	public:
+		SinusDiffusion();
+		~SinusDiffusion(){};
+		virtual double f(double & x);
+		virtual double f_prime(double & x);
+		virtual double u_initial(double & x);
+
+};
 #endif

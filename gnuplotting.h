@@ -6,6 +6,7 @@
 #include <vector>
 #include <armadillo>
 using namespace std;
+using namespace arma;
 
 /*
 Gnuplotting & operator << (Gnuplotting & outstream, char * command){
@@ -21,8 +22,8 @@ class Gnuplotting {
 		Gnuplotting(char *filename);
 		~Gnuplotting();
 
-		void xrange(double &xmin, double &xmax);
-		void yrange(double &ymin, double &ymax);
+		void xrange(double xmin, double xmax);
+		void yrange(double ymin, double ymax);
 		void title(string & titlename);
 		void title(const char * titlename);
 		void xlabel(string & x);
@@ -36,6 +37,8 @@ class Gnuplotting {
 
 		void xystream(vector<double> & x, vector<double> & y);
 		void xystream(size_t & N, arma::vec & x, arma::vec & y);
+		void xystream_replot(size_t & N, arma::vec & x, arma::vec & y, const char* title);
+		void two_xystream(size_t &N1, vec &x1, vec &y1, const char* title1, size_t &N2, vec &x2, vec &y2, const char* title2);
 	private:
 		string filename;
 		FILE * pipe;
