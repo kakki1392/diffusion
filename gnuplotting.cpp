@@ -90,6 +90,23 @@ void Gnuplotting::xystream(size_t & N, arma::vec & x, arma::vec & y){
 	cmd("e");
 }
 
+void Gnuplotting::xyzstream(size_t & N, arma::vec & x, arma::vec & y, arma::mat & z){
+	stringstream s;
+	s << "splot '-' u 1:2:3 w lines"; 
+	string command1 = s.str();
+	cmd(command1);
+	for(size_t i=0; i<N; i++){
+		for(size_t j=0; j<N; j++){
+			stringstream ss;
+			ss << x(i) << " " << y(j) << " " << z(i,j);
+			string str = ss.str();
+			cmd(str);
+		}
+		cmd("");
+	}
+	cmd("e");
+}
+
 void Gnuplotting::xystream_replot(size_t & N, arma::vec & x, arma::vec & y, const char* title){
 	stringstream s;
 	s << "replot '-' title '" << title << "' w lines";
@@ -105,9 +122,25 @@ void Gnuplotting::xystream_replot(size_t & N, arma::vec & x, arma::vec & y, cons
 	cmd("e");
 }
 
+void Gnuplotting::heatmap(size_t & Nx, size_t & Ny, arma::mat & z){
+	cmd("splot '-' matrix");
+	for(size_t i=0; i<Nx; i++){
+		stringstream ss;
+		for(size_t j=0; j<(Ny-1); j++){
+			ss << z(i,j) << " ";
+		}
+		ss << z(i,Ny-1);
+		string str = ss.str();
+		cmd(str);
+	}
+	cmd("e");
+	cmd("e");
+}
+	
+
 void Gnuplotting::two_xystream(size_t &N1, vec &x1, vec &y1, const char* title1, size_t &N2, vec &x2, vec &y2, const char* title2){
 	stringstream s;
-	s << "plot '-' t '" << title1 << "' w lines, '-' t '" << title2 << "' w lines"; 
+	s << "plot '-' t '" << title1 << "' w lines, '-' t '" << title2 << "' w points pt 19 ps 1"; 
 	string command1 = s.str();
 	cmd(command1);
 	for(size_t i=0; i < N1; i++){
@@ -117,7 +150,7 @@ void Gnuplotting::two_xystream(size_t &N1, vec &x1, vec &y1, const char* title1,
 		cmd(str1);
 	}
 	cmd("e");
-	for(size_t j=0; j<N2; j++){
+	for(size_t j=0; j<N2; j+=2){
 		stringstream ss2;
 		ss2 << x2(j) << " " << y2(j);
 		string str2 = ss2.str();

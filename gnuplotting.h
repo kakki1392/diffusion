@@ -39,6 +39,8 @@ class Gnuplotting {
 		void xystream(size_t & N, arma::vec & x, arma::vec & y);
 		void xystream_replot(size_t & N, arma::vec & x, arma::vec & y, const char* title);
 		void two_xystream(size_t &N1, vec &x1, vec &y1, const char* title1, size_t &N2, vec &x2, vec &y2, const char* title2);
+		void xyzstream(size_t & N, arma::vec & x, arma::vec & y, arma::mat & z);
+		void heatmap(size_t & Nx, size_t & Ny, arma::mat & z);
 	private:
 		string filename;
 		FILE * pipe;

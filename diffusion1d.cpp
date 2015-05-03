@@ -1,5 +1,7 @@
 #include "diffusion1d.h"
 #include <cmath>
+#include <gsl/gsl_sf_erf.h>
+#include <iostream>
 using namespace arma;
 using namespace std;
 
@@ -13,7 +15,7 @@ tau = L*L/D_0;
 isAbsorbing = true;
 isReflective = false;
 t = 0.0;
-N = 200;
+N = 101;
 dt = 0.0001;
 dx = 1.0/((double) (N-1));
 x = zeros<vec>(N);
@@ -54,7 +56,6 @@ void Diffusion1d::createDeltaFunction(){
 		u_peak = height;
 	}
 	double ymax = u_peak;
-	//gplt.yrange(0.0,ymax/20.0);
 }
 
 void Diffusion1d::createCustomInitial(){
@@ -68,6 +69,10 @@ void Diffusion1d::setReflective(){
 	isAbsorbing = false;
 }
 
+double Diffusion1d::getTime(){
+	return t;
+}
+
 void Diffusion1d::setAbsorbing(){
 	isReflective = false;
 	isAbsorbing = true;
@@ -76,22 +81,6 @@ void Diffusion1d::setAbsorbing(){
 void Diffusion1d::setL(double & l){ L = l; }
 
 void Diffusion1d::setD_0(double & d_0){ D_0 = d_0; }
-
-void Diffusion1d::print_dt_SI(){
-	cout << dt*tau << endl;
-}
-
-void Diffusion1d::print_dx_SI(){
-	cout << dx*L << endl;
-}
-
-void Diffusion1d::print_x(){
-	x.print("x: ");
-}
-
-void Diffusion1d::print_u(){
-	u.print("u: ");
-}
 
 double Diffusion1d::alpha(size_t i){
 	return f(x(i))*dt/(dx*dx);
@@ -201,15 +190,15 @@ void Diffusion1d::plot(){
 }
 
 void Diffusion1d::plot_with_unbounded(){
-	gplt.two_xystream(N,x,u,"numerical",N,x,u_unbounded,"Unbounded analytical");
+	gplt.two_xystream(N,x,u,"Numerical",N,x,u_unbounded,"Unbounded analytical");
 }
 
 void Diffusion1d::plot_with_absorbing(){
-	gplt.two_xystream(N,x,u,"numerical",N,x,u_absorbing,"Absorbing analytical");
+	gplt.two_xystream(N,x,u,"Numerical",N,x,u_absorbing,"Absorbing analytical");
 }
 
 void Diffusion1d::plot_with_reflective(){
-	gplt.two_xystream(N,x,u,"numerical",N,x,u_reflective,"Reflective analytical");
+	gplt.two_xystream(N,x,u,"Numerical",N,x,u_reflective,"Reflective analytical");
 }
 
 void Diffusion1d::plotUnbounded(){
@@ -288,21 +277,6 @@ void Diffusion1d::iterate(size_t it){
 	}
 }
 
-void Diffusion1d::print_AB(){
-	mat temp = A_inv*B;
-	temp.print();
-}
-
-void Diffusion1d::print_B(){
-	B.print("B: ");
-}
-
-void Diffusion1d::print_A_inv(){
-	A_inv.print("A_inv: ");
-}
-
-
-
 ConstantDiffusion::ConstantDiffusion(): Diffusion1d(){
 	initialize();
 }
@@ -322,15 +296,20 @@ double ConstantDiffusion::u_initial(double & x){
 
 
 StepDiffusion::StepDiffusion(): Diffusion1d(){
+//	initialize();
+	gamma_plus = 1.0;
+	gamma_minus = 1.0;
+	u_step = zeros<vec>(N);
 	initialize();
+
 }
 
 
 double StepDiffusion::f(double & x){
 	if(x < 0.5){
-		return 0.01;
+		return gamma_minus;
 	}else{
-		return 1.0;
+		return gamma_plus;
 	}
 }
 
@@ -342,10 +321,36 @@ double StepDiffusion::u_initial(double & x){
 	return 1.0;
 }
 
+void StepDiffusion::createStep_analytic(){
+	u_step = zeros<vec>(N);
+	//double A_plus = 2.0/(1.0+gsl_sf_erf(0.5/(sqrt(4.0*gamma_plus*t))) + sqrt(gamma_minus/gamma_plus)*
+	//		exp((gamma_plus-gamma_minus)*0.5*0.5/(4.0*gamma_plus*gamma_minus*t))*(1.0-gsl_sf_erf(0.5/(sqrt(4.0*gamma_minus*t)))));
+	double A_plus = 2.0/(1.0 + sqrt(gamma_minus/gamma_plus));
+	cout << t;
+	vec y = x - 0.5;
+	for(size_t i=0; i<N; i++){
+		if(y(i) < 0){
+			//double A_minus = sqrt(gamma_minus/gamma_plus)*exp((gamma_plus-gamma_minus)*0.5*0.5/(4.0*gamma_plus*gamma_minus*t))*A_plus;
+			double A_minus = A_plus*sqrt(gamma_minus/gamma_plus);
+			u_step(i) = (A_minus/(sqrt(4.0*M_PI*gamma_minus)))*exp(-(y(i)*y(i))/(4.0*gamma_minus*t));
+		}else{
+			u_step(i) = (A_plus/(sqrt(4.0*M_PI*gamma_plus)))*exp(-(y(i)*y(i))/(4.0*gamma_plus*t));
+		}
+	}
+	u_step=u_step*10.0;
+}
+
+void StepDiffusion::plot_with_step(){
+	gplt.two_xystream(N,x,u,"Numerical",N,x,u_step,"Step analytical");
+}
+
+void StepDiffusion::plot_step(){
+	gplt.xystream(N,x,u_step);
+}
+
 LinearDiffusion::LinearDiffusion(): Diffusion1d(){
 	initialize();
 }
-
 
 double LinearDiffusion::f(double & x){
 	return 1.0;
@@ -356,7 +361,7 @@ double LinearDiffusion::f_prime(double & x){
 }
 
 double LinearDiffusion::u_initial(double & x){
-	return 4.0*(x-0.5)*(x-0.5);
+	return 1.0;
 }
 
 SinusDiffusion::SinusDiffusion(): Diffusion1d(){
@@ -375,4 +380,29 @@ double SinusDiffusion::u_initial(double & x){
 	return 1.0;
 }
 
+SawDiffusion::SawDiffusion(): Diffusion1d(){
+	initialize();
+}
 
+double SawDiffusion::f(double & x){
+	return 1;
+}
+
+double SawDiffusion::f_prime(double & x){
+	return 0.0;
+}
+
+double SawDiffusion::u_initial(double & x){
+	double p = 5.0;
+	double l = 1.0/p;
+	double y = x/l;
+	double decimal;
+	double intpart;
+	decimal = modf(y,&intpart);
+	double z = decimal - intpart*l;
+	if(decimal < 0.5 ){
+		return 2.0*z/l;
+	}else{
+		return (2.0-2.0*z/l);
+	}
+}

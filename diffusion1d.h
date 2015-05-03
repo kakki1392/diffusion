@@ -40,6 +40,8 @@ class Diffusion1d{
 		void setL(double & l);
 		void setD_0(double & d_0);
 
+		double getTime();
+
 		void plot();
 		void plot_with_unbounded();
 		void plot_with_absorbing();
@@ -49,13 +51,7 @@ class Diffusion1d{
 		void plotAbsorbing();
 		void plotReflective();
 		
-		void print_dt_SI();
-		void print_dx_SI();
-		void print_B();
-		void print_A_inv();
-		void print_AB();
-		void print_x();
-		void print_u();
+		Gnuplotting gplt;
 
 		void initialize();    //Initializes matrices and vectors 
 		void solve();         //Computes A_matrix_inverse
@@ -78,19 +74,18 @@ class Diffusion1d{
 		double D_0; //max size of diffusion constant D=D(x)
 		double tau; //characteristic time scale, tau=D_0/L*L
 
-		Gnuplotting gplt;
+		
 
 		bool isReflective;
 		bool isAbsorbing;
 
 		double theta;
-		double t;  //current time of system
-		size_t N;  //Number of spatial points in [0,1]
+		//double t;  //current time of system
+		//size_t N;  //Number of spatial points in [0,1]
 		double dx; //x=jdx, j=0,....N-1
-		double dt; //
+		//double dt; //
 
-		vec x;  //arma::vector containing all positions
-		vec u;  //arma::vector containing u(x) at time t
+		//vec x;  //arma::vector containing all positions
 		vec u_unbounded;
 		vec u_absorbing;
 		vec u_reflective;
@@ -101,6 +96,13 @@ class Diffusion1d{
 		vec B_diag_0;  //diagonals of B_matrix
 		vec B_diag_up;
 		vec B_diag_down;
+	protected:
+		vec x;  //arma::vector containing all positions
+		double t;  //current time of system
+		double dt; //
+		size_t N;  //Number of spatial points in [0,1]
+		vec u;  //arma::vector containing u(x) at time t
+
 };
 
 class ConstantDiffusion: public Diffusion1d{
@@ -120,7 +122,13 @@ class StepDiffusion: public Diffusion1d{
 		virtual double f(double & x);
 		virtual double f_prime(double & x);
 		virtual double u_initial(double & x);
-
+		void createStep_analytic();
+		void plot_with_step();
+		void plot_step();
+	private:
+		double gamma_plus;
+		double gamma_minus;
+		vec u_step;
 };
 
 class LinearDiffusion: public Diffusion1d{
@@ -137,6 +145,16 @@ class SinusDiffusion: public Diffusion1d{
 	public:
 		SinusDiffusion();
 		~SinusDiffusion(){};
+		virtual double f(double & x);
+		virtual double f_prime(double & x);
+		virtual double u_initial(double & x);
+
+};
+
+class SawDiffusion: public Diffusion1d{
+	public:
+		SawDiffusion();
+		~SawDiffusion(){};
 		virtual double f(double & x);
 		virtual double f_prime(double & x);
 		virtual double u_initial(double & x);
